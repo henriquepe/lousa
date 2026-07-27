@@ -1,0 +1,51 @@
+{
+  "name": "lousa",
+  "version": "0.1.0",
+  "description": "A whiteboard where AI agents draw their explanations — hand-drawn animated diagrams over MCP, with live updates and a user→agent selection loop",
+  "license": "AGPL-3.0-only",
+  "author": "Henrique Pires",
+  "bin": {
+    "lousa": "cli.js"
+  },
+  "main": "core.js",
+  "files": [
+    "cli.js",
+    "server.js",
+    "mcp-stdio.js",
+    "lambda.js",
+    "core.js",
+    "boards.js",
+    "store.js",
+    "mcp.js",
+    "public/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node cli.js",
+    "test": "node --test test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/henriquepe/lousa.git"
+  },
+  "homepage": "https://github.com/henriquepe/lousa#readme",
+  "bugs": {
+    "url": "https://github.com/henriquepe/lousa/issues"
+  },
+  "keywords": [
+    "mcp",
+    "whiteboard",
+    "diagrams",
+    "ai-agents",
+    "claude",
+    "visual-explanations",
+    "hand-drawn"
+  ],
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "dependencies": {
+    "roughjs": "^4.6.6"
+  }
+}

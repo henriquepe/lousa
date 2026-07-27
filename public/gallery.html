@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lousa — boards</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  #galleryMain { flex: 1; overflow-y: auto; padding: 24px; }
+  #galleryHead { display: flex; align-items: baseline; gap: 14px; margin-bottom: 20px; }
+  #galleryHead h1 { font-size: 22px; }
+  #galleryHead .hint { font-size: 12px; color: #998; }
+  #cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .card {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .card:hover { border-color: var(--accent); box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+  .card h2 { font-size: 15px; margin-bottom: 6px; padding-right: 26px; }
+  .card p { font-size: 12.5px; color: #778; line-height: 1.45; max-height: 3.6em; overflow: hidden; }
+  .card .meta { margin-top: 10px; font-size: 11px; color: #aab; }
+  .card .del {
+    position: absolute; top: 10px; right: 10px;
+    border: none; background: none; cursor: pointer;
+    font-size: 14px; color: #ccb; padding: 4px;
+  }
+  .card .del:hover { color: #d63b3b; }
+  #empty { color: #889; font-size: 14px; line-height: 1.7; max-width: 560px; }
+  #empty code { background: #f0efe9; padding: 1px 6px; border-radius: 6px; font-size: 12.5px; }
+</style>
+</head>
+<body>
+<header id="topbar">
+  <div id="brand">🖊️ <strong>Lousa</strong><span style="font-size:12px;color:#889">visual explanations drawn by AI agents</span></div>
+</header>
+<main id="galleryMain">
+  <div id="galleryHead">
+    <h1>Boards</h1>
+    <span class="hint" id="count"></span>
+  </div>
+  <div id="cards"></div>
+  <div id="empty" hidden>
+    No boards yet.<br><br>
+    Ask an agent connected to Lousa for a visual explanation — it creates a board via
+    the MCP tool <code>create_board</code> and the drawing shows up here, animating live.
+  </div>
+</main>
+<script>
+const cards = document.getElementById("cards");
+const empty = document.getElementById("empty");
+const count = document.getElementById("count");
+const dtf = new Intl.DateTimeFormat(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+
+let token = localStorage.getItem("lousa_token") || "";
+const withToken = url => token ? `${url}${url.includes("?") ? "&" : "?"}t=${encodeURIComponent(token)}` : url;
+
+async function refresh() {
+  try {
+    const response = await fetch(withToken("/api/boards"));
+    if (response.status === 401) {
+      const entered = prompt("Lousa access token (LOUSA_TOKEN):");
+      if (entered) { token = entered.trim(); localStorage.setItem("lousa_token", token); return refresh(); }
+      return;
+    }
+    const boards = await response.json();
+    count.textContent = boards.length ? `${boards.length} board${boards.length > 1 ? "s" : ""}` : "";
+    empty.hidden = boards.length > 0;
+    cards.innerHTML = "";
+    for (const board of boards) {
+      const card = document.createElement("div");
+      card.className = "card";
+      const h2 = document.createElement("h2");
+      h2.textContent = board.title || "Untitled";
+      const p = document.createElement("p");
+      p.textContent = board.narration || "";
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const remaining = board.expiresAt ? Math.max(0, (Date.parse(board.expiresAt) - Date.now()) / 3600000) : null;
+      const expiry = remaining === null ? "permanent"
+        : remaining < 1 ? `expires in ${Math.max(1, Math.round(remaining * 60))}min`
+        : `expires in ${Math.round(remaining)}h`;
+      meta.textContent = `${board.elements} elements · ${dtf.format(new Date(board.updatedAt))} · ${expiry}`;
+      const del = document.createElement("button");
+      del.className = "del";
+      del.textContent = "✕";
+      del.title = "Delete board";
+      del.addEventListener("click", async event => {
+        event.stopPropagation();
+        if (!confirm(`Delete "${board.title}"?`)) return;
+        await fetch(withToken(`/api/boards/${board.id}`), { method: "DELETE" });
+        refresh();
+      });
+      card.append(h2, p, meta, del);
+      card.addEventListener("click", () => { location.href = `/b/${board.id}`; });
+      cards.appendChild(card);
+    }
+  } catch { /* server may be restarting */ }
+}
+
+refresh();
+setInterval(() => { if (!document.hidden) refresh(); }, 5000);
+</script>
+</body>
+</html>

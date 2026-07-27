@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci
+      - run: node --check cli.js && node --check server.js && node --check mcp-stdio.js && node --check core.js && node --check boards.js && node --check store.js && node --check mcp.js && node --check lambda.js && node --check public/app.js
+      - run: npm test
