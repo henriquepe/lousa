@@ -1,6 +1,6 @@
 "use strict";
 
-/* Entrada local: processo Node com http.createServer, storage em disco. */
+/* Local entrypoint: Node process with http.createServer, disk storage. */
 
 const http = require("http");
 const { handleRequest } = require("./core");

@@ -1,7 +1,7 @@
 "use strict";
 
-/* MCP server (streamable HTTP, stateless): JSON-RPC 2.0 sobre POST /mcp.
-   Sem sessões — cada request é independente, o que casa com Lambda. */
+/* MCP server (streamable HTTP, stateless): JSON-RPC 2.0 over POST /mcp.
+   No sessions — every request is independent, which fits Lambda. */
 
 const boards = require("./boards");
 
@@ -138,7 +138,7 @@ async function handleRpc(message, baseUrl) {
   const reply = result => ({ jsonrpc: "2.0", id, result });
   const fail = (code, msg) => ({ jsonrpc: "2.0", id, error: { code, message: msg } });
 
-  if (id === undefined || id === null) return null; // notification — sem resposta
+  if (id === undefined || id === null) return null; // notification — no reply
 
   try {
     switch (method) {
@@ -168,7 +168,7 @@ async function handleRpc(message, baseUrl) {
   }
 }
 
-/* Entrada HTTP: reqInfo {method, headers, body Buffer} → {status, headers, body} */
+/* HTTP entrypoint: reqInfo {method, headers, body Buffer} → {status, headers, body} */
 async function handleMcp(reqInfo, { authorized, baseUrl }) {
   const jsonResponse = (status, body) => ({
     status,

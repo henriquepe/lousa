@@ -1,6 +1,6 @@
 "use strict";
 
-/* Operações de board compartilhadas entre a API HTTP e as tools MCP. */
+/* Board operations shared by the HTTP API and the MCP tools. */
 
 const crypto = require("crypto");
 const store = require("./store");
@@ -17,7 +17,7 @@ function normalizeTtl(value) {
   return hours === 0 ? 0 : Math.min(hours, MAX_TTL_HOURS);
 }
 
-/* Expiração desliza com updatedAt: quadro em uso continua vivo. ttlHours 0 = permanente. */
+/* Expiry slides with updatedAt: a board in use stays alive. ttlHours 0 = permanent. */
 function stampExpiry(board) {
   board.ttlHours = normalizeTtl(board.ttlHours);
   board.expiresAt = board.ttlHours === 0
@@ -36,7 +36,7 @@ function isExpired(board) {
   return expiresAt !== null && Date.parse(expiresAt) < Date.now();
 }
 
-/* Carrega um board vivo; expirado é apagado na hora (limpeza lazy, sem cron). */
+/* Loads a live board; an expired one is deleted on the spot (lazy cleanup, no cron). */
 async function loadAlive(id) {
   const board = await store.get(assertId(id));
   if (!board) return null;
@@ -72,7 +72,7 @@ function assertId(id) {
 async function createBoard({ title, narration, scene, requests, ttlHours }) {
   const board = {
     id: crypto.randomBytes(6).toString("hex"),
-    title: String(title || "Sem título").slice(0, 120),
+    title: String(title || "Untitled").slice(0, 120),
     narration: String(narration || "").slice(0, 600),
     scene: sanitizeScene(scene || []),
     requests: cleanRequests(requests),
@@ -145,7 +145,7 @@ async function setSelection(id, ids) {
   const sceneIds = new Set((board.scene || []).map(el => el.id));
   board.selection = (Array.isArray(ids) ? ids : []).slice(0, 100).map(String).filter(elId => sceneIds.has(elId));
   board.selectionAt = new Date().toISOString();
-  // sem bump de updatedAt: seleção não deve re-renderizar viewers
+  // no updatedAt bump: selection must not re-render viewers
   await store.put(board);
   console.log(`[board] selection ${id}: [${board.selection.join(", ")}]`);
   return { selection: board.selection, selectionAt: board.selectionAt };

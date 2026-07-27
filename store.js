@@ -1,6 +1,6 @@
 "use strict";
 
-/* Storage de boards: S3 quando LOUSA_BUCKET está definido (Lambda), senão disco local. */
+/* Board storage: S3 when LOUSA_BUCKET is set (Lambda), local disk otherwise. */
 
 const fs = require("fs");
 const os = require("os");

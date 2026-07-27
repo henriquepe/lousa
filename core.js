@@ -1,8 +1,8 @@
 "use strict";
 
-/* Roteamento HTTP compartilhado entre o servidor local (server.js) e a Lambda (lambda.js).
-   reqInfo: { method, path, query (URLSearchParams), headers (minúsculas), body (Buffer) }
-   retorno: { status, headers, body (string | Buffer) } */
+/* HTTP routing shared by the local server (server.js) and the Lambda (lambda.js).
+   reqInfo: { method, path, query (URLSearchParams), headers (lowercased), body (Buffer) }
+   returns: { status, headers, body (string | Buffer) } */
 
 const fs = require("fs");
 const path = require("path");
@@ -33,7 +33,7 @@ const file = (filePath, type) => {
 
 function authorized(reqInfo) {
   const token = process.env.LOUSA_TOKEN;
-  if (!token) return true; // dev local sem token configurado
+  if (!token) return true; // local dev without a configured token
   const header = reqInfo.headers["authorization"] || "";
   return header === `Bearer ${token}` || reqInfo.query.get("t") === token;
 }

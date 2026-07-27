@@ -16,13 +16,13 @@ const FILLS = {
 };
 
 let scene = [];
-let prevJson = new Map();          // id -> JSON.stringify(el) da última renderização
+let prevJson = new Map();          // id -> JSON.stringify(el) of the last render
 let view = { x: -100, y: -80, w: 1800, h: 1125 };
 let boardId = (location.pathname.match(/^\/b\/([a-f0-9]{6,32})$/) || [])[1] || null;
 let boardUpdatedAt = null;
-let selected = new Set();          // ids que o usuário marcou como referência para o agente
+let selected = new Set();          // ids the user marked as reference for the agent
 
-/* ---------- utilidades ---------- */
+/* ---------- utilities ---------- */
 
 const hashSeed = str => {
   let h = 2166136261;
@@ -47,7 +47,7 @@ function roughOpts(el, extra = {}) {
 }
 
 function makeText(x, y, content, { size = 16, color = COLORS.black, anchor = "middle", maxWidth = 0, maxHeight = 0, minSize = 9 } = {}) {
-  const CHAR_W = 0.62; // fator médio de largura da fonte manuscrita (mais larga que 0.58)
+  const CHAR_W = 0.62; // average char width of the handwritten font
 
   const wrap = fontSize => {
     const perLine = maxWidth > 0 ? Math.max(3, Math.floor(maxWidth / (fontSize * CHAR_W))) : Infinity;
@@ -57,7 +57,7 @@ function makeText(x, y, content, { size = 16, color = COLORS.black, anchor = "mi
       if (!words.length) { lines.push(""); continue; }
       let line = "";
       for (let word of words) {
-        while (word.length > perLine) { // token sem espaço maior que a linha: quebra dura
+        while (word.length > perLine) { // unbreakable token longer than the line: hard break
           if (line) { lines.push(line); line = ""; }
           lines.push(word.slice(0, perLine));
           word = word.slice(perLine);
@@ -71,7 +71,7 @@ function makeText(x, y, content, { size = 16, color = COLORS.black, anchor = "mi
     return lines;
   };
 
-  // Encolhe a fonte até o bloco de linhas caber na altura disponível.
+  // Shrink the font until the line block fits the available height.
   let fontSize = size;
   let lines = wrap(fontSize);
   while (maxHeight > 0 && fontSize > minSize && lines.length * fontSize * 1.25 > maxHeight) {
@@ -85,7 +85,7 @@ function makeText(x, y, content, { size = 16, color = COLORS.black, anchor = "mi
   text.setAttribute("fill", color);
   text.setAttribute("font-size", fontSize);
   text.setAttribute("text-anchor", anchor);
-  // Sem isso, a baseline alfabética desloca o bloco ~0.35em acima do centro pedido.
+  // Without this the alphabetic baseline shifts the block ~0.35em above the requested center.
   text.setAttribute("dominant-baseline", "central");
   const lineHeight = fontSize * 1.25;
   const y0 = y - ((lines.length - 1) * lineHeight) / 2;
@@ -99,7 +99,7 @@ function makeText(x, y, content, { size = 16, color = COLORS.black, anchor = "mi
   return text;
 }
 
-/* ---------- geometria (âncoras de setas) ---------- */
+/* ---------- geometry (arrow anchors) ---------- */
 
 function geometryOf(el) {
   if (["box", "ellipse", "diamond", "cylinder", "note"].includes(el.type)) {
@@ -118,7 +118,7 @@ function anchorPoint(geometry, towards) {
   return { x: cx + dx * scale, y: cy + dy * scale };
 }
 
-/* ---------- desenho de cada tipo ---------- */
+/* ---------- drawing each element type ---------- */
 
 function drawElement(el, geometryMap) {
   const group = document.createElementNS(NS, "g");
@@ -162,7 +162,7 @@ function drawElement(el, geometryMap) {
       A ${w / 2} ${ry} 0 0 1 ${x} ${y + h - ry} Z
       M ${x} ${y + ry} A ${w / 2} ${ry} 0 0 0 ${x + w} ${y + ry}`;
     group.appendChild(rc.path(d, roughOpts(el)));
-    // Zona segura de texto: abaixo da elipse do topo (2*ry) e acima do arco inferior (ry).
+    // Safe text zone: below the top ellipse (2*ry) and above the bottom arc (ry).
     if (el.label) group.appendChild(makeText(x + w / 2, y + ry * 2 + (h - ry * 3) / 2, el.label, { color, maxWidth: w - 24, maxHeight: h - ry * 3 - 6 }));
   }
 
@@ -218,10 +218,10 @@ function drawElement(el, geometryMap) {
   return group;
 }
 
-/* ---------- seleção (referência do usuário para o agente) ---------- */
+/* ---------- selection (user reference for the agent) ---------- */
 
-/* Hit-test geométrico próprio, em coordenadas do mundo — o hit-testing nativo de
-   SVG falha para strokes transparentes em eventos sintetizados/compositados. */
+/* Our own geometric hit-test in world coordinates — native SVG hit-testing
+   fails for transparent strokes on synthesized/composited events. */
 
 function arrowPointsOf(el, geometryMap) {
   if (el.type === "arrow" && el.from && el.to) {
@@ -245,13 +245,13 @@ function distToSegment(px, py, a, b) {
 
 function hitTest(px, py) {
   const rect = svg.getBoundingClientRect();
-  const tolerance = 12 * (view.w / rect.width); // ~12px de tela, em unidades do mundo
+  const tolerance = 12 * (view.w / rect.width); // ~12 screen px, in world units
   const geometryMap = new Map();
   for (const el of scene) {
     const geometry = geometryOf(el);
     if (geometry) geometryMap.set(el.id, geometry);
   }
-  for (let i = scene.length - 1; i >= 0; i--) { // topo primeiro (ordem inversa de desenho)
+  for (let i = scene.length - 1; i >= 0; i--) { // topmost first (reverse drawing order)
     const el = scene[i];
     if (el.type === "arrow" || el.type === "line") {
       const points = arrowPointsOf(el, geometryMap);
@@ -325,7 +325,7 @@ window.addEventListener("keydown", event => {
   if (event.key === "Escape" && selected.size) { selected.clear(); syncSelection(); }
 });
 
-/* ---------- render + animação ---------- */
+/* ---------- render + animation ---------- */
 
 function renderScene(newScene, { animate = true } = {}) {
   const geometryMap = new Map();
@@ -350,7 +350,7 @@ function renderScene(newScene, { animate = true } = {}) {
     const json = JSON.stringify(el);
     const existing = oldNodes.get(el.id);
     if (existing && prevJson.get(el.id) === json) {
-      world.appendChild(existing); // mantém, só reordena
+      world.appendChild(existing); // unchanged: keep node, just reorder
       continue;
     }
     existing?.remove();
@@ -363,7 +363,7 @@ function renderScene(newScene, { animate = true } = {}) {
   prevJson = new Map(newScene.map(el => [el.id, JSON.stringify(el)]));
   scene = newScene;
 
-  syncSelection(); // poda ids que saíram da cena e redesenha contornos
+  syncSelection(); // prune ids gone from the scene and redraw outlines
 
   if (toReveal.length) revealSequentially(toReveal);
   fitView();
@@ -515,7 +515,7 @@ function setBoardTitle(title) {
   document.getElementById("boardTitle").textContent = title;
 }
 
-/* ---------- board (fonte: agentes via API) ---------- */
+/* ---------- board (source: agents via API) ---------- */
 
 async function loadBoard() {
   if (!boardId) return;
@@ -531,7 +531,7 @@ async function loadBoard() {
   } catch (error) { toast(error.message); }
 }
 
-/* Live-update: um agente pode editar este quadro via PUT — refletir na tela. */
+/* Live-update: an agent may edit this board via PUT — reflect it on screen. */
 setInterval(async () => {
   if (!boardId) return;
   try {
