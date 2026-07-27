@@ -2,6 +2,8 @@
 
 **A whiteboard where your AI agent draws its explanations.**
 
+![Your agent drawing a rate limiter explanation, stroke by stroke](docs/demo.gif)
+
 Ask your agent *"explain this visually"* and it sketches an animated, hand-drawn diagram on a live board — instead of another wall of text. Lousa is an MCP server + web viewer: the agent authors a declarative scene (boxes, arrows, cylinders, notes), and the board renders it stroke by stroke, as if someone were drawing it in front of you.
 
 > *Lousa* is Portuguese for the classic school blackboard.
