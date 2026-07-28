@@ -1,22 +1,22 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "name": "io.github.henriquepe/lousa",
-  "description": "A whiteboard where AI agents draw their explanations — hand-drawn animated diagrams with live updates and a user selection loop",
+  "description": "A whiteboard where AI agents draw their explanations as hand-drawn animated diagrams",
   "repository": {
     "url": "https://github.com/henriquepe/lousa",
     "source": "github"
   },
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packages": [
     {
-      "registry_type": "npm",
+      "registryType": "npm",
       "identifier": "lousa",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "transport": {
         "type": "stdio"
       },
-      "runtime_hint": "npx",
-      "package_arguments": [
+      "runtimeHint": "npx",
+      "packageArguments": [
         {
           "type": "positional",
           "value": "mcp"

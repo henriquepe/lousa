@@ -1,6 +1,6 @@
 {
   "name": "lousa",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A whiteboard where AI agents draw their explanations — hand-drawn animated diagrams over MCP, with live updates and a user→agent selection loop",
   "license": "AGPL-3.0-only",
   "author": "Henrique Pires",
@@ -47,5 +47,6 @@
   },
   "dependencies": {
     "roughjs": "^4.6.6"
-  }
+  },
+  "mcpName": "io.github.henriquepe/lousa"
 }
