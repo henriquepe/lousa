@@ -46,30 +46,32 @@ function roughOpts(el, extra = {}) {
   };
 }
 
-function makeText(x, y, content, { size = 16, color = COLORS.black, anchor = "middle", maxWidth = 0, maxHeight = 0, minSize = 9 } = {}) {
-  const CHAR_W = 0.62; // average char width of the handwritten font
+const CHAR_W = 0.62; // average char width of the handwritten font
 
-  const wrap = fontSize => {
-    const perLine = maxWidth > 0 ? Math.max(3, Math.floor(maxWidth / (fontSize * CHAR_W))) : Infinity;
-    const lines = [];
-    for (const paragraph of String(content).split("\n")) {
-      const words = paragraph.split(/\s+/).filter(Boolean);
-      if (!words.length) { lines.push(""); continue; }
-      let line = "";
-      for (let word of words) {
-        while (word.length > perLine) { // unbreakable token longer than the line: hard break
-          if (line) { lines.push(line); line = ""; }
-          lines.push(word.slice(0, perLine));
-          word = word.slice(perLine);
-        }
-        if (!word) continue;
-        if (line && line.length + 1 + word.length > perLine) { lines.push(line); line = word; }
-        else line = line ? `${line} ${word}` : word;
+function wrapLines(content, maxWidth, fontSize) {
+  const perLine = maxWidth > 0 ? Math.max(3, Math.floor(maxWidth / (fontSize * CHAR_W))) : Infinity;
+  const lines = [];
+  for (const paragraph of String(content).split("\n")) {
+    const words = paragraph.split(/\s+/).filter(Boolean);
+    if (!words.length) { lines.push(""); continue; }
+    let line = "";
+    for (let word of words) {
+      while (word.length > perLine) { // unbreakable token longer than the line: hard break
+        if (line) { lines.push(line); line = ""; }
+        lines.push(word.slice(0, perLine));
+        word = word.slice(perLine);
       }
-      if (line) lines.push(line);
+      if (!word) continue;
+      if (line && line.length + 1 + word.length > perLine) { lines.push(line); line = word; }
+      else line = line ? `${line} ${word}` : word;
     }
-    return lines;
-  };
+    if (line) lines.push(line);
+  }
+  return lines;
+}
+
+function makeText(x, y, content, { size = 16, color = COLORS.black, anchor = "middle", maxWidth = 0, maxHeight = 0, minSize = 9 } = {}) {
+  const wrap = fontSize => wrapLines(content, maxWidth, fontSize);
 
   // Shrink the font until the line block fits the available height.
   let fontSize = size;
@@ -101,9 +103,17 @@ function makeText(x, y, content, { size = 16, color = COLORS.black, anchor = "mi
 
 /* ---------- geometry (arrow anchors) ---------- */
 
+const NOTE_FONT = 14;
+
 function geometryOf(el) {
   if (["box", "ellipse", "diamond", "cylinder", "note"].includes(el.type)) {
-    return { x: num(el.x), y: num(el.y), w: num(el.w, 120), h: num(el.h, 60) };
+    const geometry = { x: num(el.x), y: num(el.y), w: num(el.w, 120), h: num(el.h, 60) };
+    if (el.type === "note" && el.text) {
+      // Notes carry prose: grow vertically to fit readable text instead of shrinking it.
+      const needed = wrapLines(el.text, geometry.w - 20, NOTE_FONT).length * NOTE_FONT * 1.25 + 20;
+      geometry.h = Math.max(geometry.h, Math.ceil(needed));
+    }
+    return geometry;
   }
   return null;
 }
@@ -134,7 +144,8 @@ function drawElement(el, geometryMap) {
     group.appendChild(rc.rectangle(x, y, w, h, opts));
     const label = isNote ? el.text : el.label;
     if (label) group.appendChild(makeText(x + w / 2, y + h / 2, label, {
-      size: isNote ? 14 : 16, color: isNote ? "#6b5d1f" : color, maxWidth: w - 20, maxHeight: h - 14,
+      size: isNote ? NOTE_FONT : 16, color: isNote ? "#6b5d1f" : color,
+      maxWidth: w - 20, maxHeight: h - 14, minSize: isNote ? 12 : 9,
     }));
   }
 
